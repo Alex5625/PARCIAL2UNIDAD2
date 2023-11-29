@@ -6,6 +6,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::io::prelude::*;
 
+//SOFIA MIERES, IGNACIO MORALES, ALEXIS HERNANDEZ
 
 mod utiles;
 
