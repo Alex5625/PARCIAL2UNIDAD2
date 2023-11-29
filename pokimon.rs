@@ -9,6 +9,7 @@ use std::io::prelude::*;
 
 mod utiles;
 
+#[derive(Clone)]
 struct Pokemon {
     numero: String,
     nombre: String,
@@ -131,16 +132,16 @@ fn cambia_nombre(){
     .create(true)
     .open("pokemon.txt")
     .unwrap();
-
+    let mut control_pikashu = false;
     let mut new_pokemon = inicializar_struct();
-
-    let mut control_pikashu: bool = false;
+    let mut struct_aux = inicializar_struct();
 
     let mut mote_nuevo = String::new();
 
     loop {
         let nombre_pokemon = utiles::ingreso_texto("mete el nombre de tu pinshi pokemon".to_string());
         if let Ok(lines) = read_lines("./pokemon.txt") {
+            control_pikashu = false;
             for line in lines {
 
 
@@ -197,9 +198,12 @@ fn cambia_nombre(){
 
 
                 if control_pikashu == true {
+                    struct_aux = new_pokemon.clone();
+
                     mote_nuevo = utiles::ingreso_texto("nuevo mote".to_string());
-                    new_pokemon.nombre = mote_nuevo;
+                    struct_aux.nombre = mote_nuevo;
                     println!("SE CAMBIO EL NOMBRE");
+                
                 }
 
                 let string_print = format!("\n{},{},{},{},{},{},{},{},{},{},{},{},{}", new_pokemon.numero,new_pokemon.nombre,  
@@ -211,6 +215,13 @@ fn cambia_nombre(){
             }
 
             if control_pikashu {
+                let string_print = format!("\n{},{},{},{},{},{},{},{},{},{},{},{},{}", struct_aux.numero,struct_aux.nombre,  
+                struct_aux.type1,struct_aux.type2,struct_aux.total,struct_aux.hp,struct_aux.attak,
+                struct_aux.defense,struct_aux.sp_attak,struct_aux.sp_defense,struct_aux.speed,struct_aux.generation,
+                struct_aux.legendary); //y continuar
+                //hacer el write_all
+                file.write_all(string_print.as_bytes()).expect("PERDON NO FUNCIONO");
+
                 break;
             } else {
                 println!("No se encontro el pokemon en el dataset, Por favor ingrese otro denuevo");
@@ -219,7 +230,8 @@ fn cambia_nombre(){
 
 }
 
-fn append(){
+
+fn eliminar_pokemon(){
 
     let mut file = OpenOptions::new()
     .write(true)
@@ -230,77 +242,55 @@ fn append(){
 
     let mut new_pokemon = inicializar_struct();
 
-
     let mut control_pikashu: bool = false;
+
+    let mut file_pokemon = File::create("pokemon1.txt").unwrap();
 
     loop {
         let nombre_pokemon = utiles::ingreso_texto("mete el nombre de tu pinshi pokemon".to_string());
+
         if let Ok(lines) = read_lines("./pokemon.txt") {
-
+            let mut contenido = String::new();
+    
             for line in lines {
-
-                if let Ok(ip) = line {
+                if let Ok(ref ip) = line {
                     let ip_copy = ip.clone();
                     let split = ip_copy.split(",");
-
+    
                     let mut contador_columnas = 0;
-
+                    let mut skip_line = false;
+    
                     for elemento in split {
-                        match contador_columnas {
-                            0 => new_pokemon.numero = elemento.to_string().to_lowercase(),
-                            1 => new_pokemon.nombre = elemento.to_string().to_lowercase(),
-                            2 => new_pokemon.type1 = elemento.to_string().to_lowercase(),
-                            3 => new_pokemon.type2 = elemento.to_string().to_lowercase(),
-                            4 => new_pokemon.total = elemento.to_string().to_lowercase(),
-                            5 => new_pokemon.hp = elemento.to_string().to_lowercase(),
-                            6 => new_pokemon.attak = elemento.to_string().to_lowercase(),
-                            7 => new_pokemon.defense = elemento.to_string().to_lowercase(),
-                            8 => new_pokemon.sp_attak = elemento.to_string().to_lowercase(),
-                            9 => new_pokemon.sp_defense = elemento.to_string().to_lowercase(),
-                            10 => new_pokemon.speed = elemento.to_string().to_lowercase(),
-                            11 => new_pokemon.generation = elemento.to_string().to_lowercase(),
-                            12 => new_pokemon.legendary = elemento.to_string().to_lowercase(),
-                            _ => (),
-
+                        println!("{}", elemento);
+                        if contador_columnas == 1 && elemento.to_string().to_lowercase() == nombre_pokemon.to_string().to_lowercase() {
+                            control_pikashu = true;
+                            skip_line = true;
+                            break;
                         }
                         contador_columnas += 1;
                     }
-
-                        if nombre_pokemon.to_lowercase() == new_pokemon.nombre {
-
-
-                            println!("\n~~Se encontro a su Pokemon~~\n");
-                            println!(
-                                "#{}\nNombre~ {}\nType1~ {}\nType2~ {}\nTotal~ {}\nHp~ {}\nAttak~ {}\nDefense~ {}\nSp. Attak~ {}\nSp. Defense~ {}\nSpeed~ {}\nGeneration~ {}\nLegendary~ {}",
-                                new_pokemon.numero,
-                                new_pokemon.nombre,
-                                new_pokemon.type1,
-                                new_pokemon.type2,
-                                new_pokemon.total,
-                                new_pokemon.hp,
-                                new_pokemon.attak,
-                                new_pokemon.defense,
-                                new_pokemon.sp_attak,
-                                new_pokemon.sp_defense,
-                                new_pokemon.speed,
-                                new_pokemon.generation,
-                                new_pokemon.legendary
-                            );
-                            control_pikashu = true;
-                        }
+    
+                    if skip_line {
+                        continue;
                     }
                 }
-                //AQUI SE HACE EL APPEND
-
+                contenido.push_str(&line.unwrap());
+                contenido.push('\n');
             }
+    
+            file_pokemon.write_all(contenido.as_bytes()).unwrap();
 
             if control_pikashu {
-                break;
+                let mut file_pokemon = File::create("pokemon1.txt").unwrap();
+                file_pokemon.write_all(contenido.as_bytes()).unwrap();
             } else {
                 println!("No se encontro el pokemon en el dataset, Por favor ingrese otro denuevo");
             }
         }
 
+        break;
+        }
+    println!("Listo! revisa el nuevo archivo llamado pokemon1.txt");
 }
 
 fn inicializar_struct() -> Pokemon{
@@ -344,13 +334,11 @@ fn open_file_to_append(p: &Path) -> File{
 
 fn main() {
 
-    println!("digite 1 para eliminar una fila \n 2 para ponerle un mote al pokemon seleccionado \n para copiar al pokemon
-        seleccionado al final de la lista\n");
-
+    println!("digite: \n1 para eliminar una fila \n2 para ponerle un mote al pokemon seleccionado y agregarlo al final de la lista \n ");
     match utiles::texto_numero("desicion".to_string()){
-        1 => elimina_fila(),
+        1 => eliminar_pokemon(),
         2 => cambia_nombre(),
-        3 => append(),
+        3 => elimina_fila(),
         _ => ()
 
     }
